@@ -1,0 +1,903 @@
+#include"game.h"
+
+void buyStuff(hero& superman,medicine medicine)//买东西放进背包
+{
+	for(int i=0;i<superman.Bag.Max_Number;i++)//遍历背包
+	{
+		for(int j=1;j<superman.Bag.Blanks[i].Max_Size;j++)//遍历每个格子
+		{// 判断英雄是否有钱
+			if(superman.Money>=medicine.Gold)
+			{ //判断当前格子中第一个位置是否已经放了东西，并且此时的背包还有空间
+				if(superman.Bag.Blanks[i].Medicines[0].Weight==0 && superman.Bag.Current_Number<=superman.Bag.Max_Number && superman.Bag.Used_Load<=superman.Bag.Max_Load-medicine.Weight)
+				{//把该物品的属性赋值给格子的首位
+					superman.Bag.Blanks[i].Medicines[0].Gold=medicine.Gold;
+					superman.Bag.Blanks[i].Medicines[0].Resume=medicine.Resume;
+					superman.Bag.Blanks[i].Medicines[0].Weight=medicine.Weight;
+					superman.Bag.Blanks[i].Medicines[0].ID=medicine.ID;
+					superman.Bag.Blanks[i].Current_Weight+=medicine.Weight;//该格子的总质量增加
+					superman.Bag.Used_Load+=medicine.Weight;//负重增加
+					superman.Money-=medicine.Gold;//付费
+					superman.Bag.Blanks[i].Current_Goods_Number++;//该格子的当前所有物品数加一
+					superman.Bag.Current_Number++;//该背包已被使用的格子数加一
+					return;
+					//判断该格子是否还能加入更多的同类东西
+				}else if( superman.Bag.Current_Number<=superman.Bag.Max_Number && superman.Bag.Used_Load<=superman.Bag.Max_Load-medicine.Weight && superman.Bag.Blanks[i].Medicines[j].Weight==0)//余下可载重量大于一瓶血的重量，且背包刚好有空位
+				{
+					if(medicine.ID!=superman.Bag.Blanks[i].Medicines[0].ID)//判断该要添加如背包格子中的物品是否与该格子中已有物品为同类
+						break;//不是则跳出，寻找背包中下一个格子
+					//是的话就该物品的属性赋值给这个格子
+					superman.Bag.Blanks[i].Medicines[j].Gold=medicine.Gold;
+					superman.Bag.Blanks[i].Medicines[j].Resume=medicine.Resume;
+					superman.Bag.Blanks[i].Medicines[j].Weight=medicine.Weight;
+					superman.Bag.Blanks[i].Medicines[j].ID=medicine.ID;
+					superman.Bag.Blanks[i].Current_Weight+=medicine.Weight;//该格子的总质量增加
+					superman.Bag.Used_Load+=medicine.Weight;//负重增加
+					superman.Money-=medicine.Gold;//付费
+					superman.Bag.Blanks[i].Current_Goods_Number++;//该格子的当前所有物品数加一
+					return;
+				}
+			}
+		}
+
+	}
+}
+bool pickStuff(hero& superman,medicine medicine)//捡东西放进背包
+{
+	for(int i=0;i<superman.Bag.Max_Number;i++)//遍历该背包
+	{
+		for(int j=1;j<superman.Bag.Blanks[i].Max_Size;j++)//遍历格子
+		{//判断该背包是否有空间并且该物品质量是否会超出背包所能承受范围
+			if(superman.Bag.Blanks[i].Medicines[0].Weight==0 && superman.Bag.Used_Load<=superman.Bag.Max_Load-medicine.Weight && superman.Bag.Current_Number<=superman.Bag.Max_Number )
+			{//把该物品的属性赋值给该格子的首位
+				superman.Bag.Blanks[i].Medicines[0].Gold=medicine.Gold;
+				superman.Bag.Blanks[i].Medicines[0].Resume=medicine.Resume;
+				superman.Bag.Blanks[i].Medicines[0].Weight=medicine.Weight;
+				superman.Bag.Blanks[i].Medicines[0].ID=medicine.ID;
+				superman.Bag.Blanks[i].Current_Weight+=medicine.Weight;//该格子的总质量增加
+				superman.Bag.Used_Load+=medicine.Weight;//负重增加
+				superman.Bag.Blanks[i].Current_Goods_Number++;//该格子的当前所有物品数加一
+				superman.Bag.Current_Number++;//该背包已被使用的格子数加一
+				return true;
+				// 判断该背包是否有空间并且该物品质量是否会超出背包所能承受范围
+			}else if(superman.Bag.Blanks[i].Current_Goods_Number<superman.Bag.Blanks[i].Max_Size && superman.Bag.Current_Number<=superman.Bag.Max_Number && superman.Bag.Blanks[i].Medicines[j].Weight==0 && superman.Bag.Used_Load<=superman.Bag.Max_Load-medicine.Weight)//余下可载重量大于一瓶血的重量，且背包刚好有空位
+			{
+				if(medicine.ID!=superman.Bag.Blanks[i].Medicines[0].ID)//判断该物品与已经在里面的物品是否是同一类
+					break;//不是则跳出循环
+				//赋值属性
+				superman.Bag.Blanks[i].Medicines[j].Gold=medicine.Gold;
+				superman.Bag.Blanks[i].Medicines[j].Resume=medicine.Resume;
+				superman.Bag.Blanks[i].Medicines[j].Weight=medicine.Weight;
+				superman.Bag.Blanks[i].Medicines[j].ID=medicine.ID;
+				superman.Bag.Blanks[i].Current_Weight+=medicine.Weight;//该格子的总质量增加
+				superman.Bag.Used_Load+=medicine.Weight;//负重增加
+				superman.Bag.Blanks[i].Current_Goods_Number++;//该格子的当前所有物品数加一
+				return true;
+			}
+		}
+	}
+	return false;
+}
+void initBlank(hero& superman)//初始化背包格子的最大可装物品，和当前格子已装物品数
+{
+	for(int i=0;i<superman.Bag.Max_Number;i++)//遍历该背包
+	{
+		if(!(superman.Bag.Blanks[i].Current_Weight>0))//判断该格子内是否已经存放东西
+		{//没有则进来将格子的属性设置为以下标准
+			superman.Bag.Blanks[i].ID=i+1;
+			superman.Bag.Blanks[i].Max_Size=5;
+			superman.Bag.Blanks[i].Current_Weight=0;
+			superman.Bag.Blanks[i].Current_Goods_Number=0; 
+		}
+	}
+}
+void initBag(hero& superman)//初始化背包
+{
+	initBlank(superman);//调用该函数先初始化背包中的每个格子
+	for(int i=0;i<superman.Bag.Max_Number;i++)//遍历该背包
+	{
+		for(int j=0;j<superman.Bag.Blanks[i].Max_Size;j++)//遍历格子
+		{
+			if(!(superman.Bag.Blanks[i].Medicines[j].Weight>0))//判断该格子中是否已经存有东西，或已经有被初始化过
+			{//都没有的话就以以下标准对其进行初始化
+				superman.Bag.Blanks[i].Medicines[j].ID=0;
+				superman.Bag.Blanks[i].Medicines[j].Gold=0;
+				superman.Bag.Blanks[i].Medicines[j].Weight=0;
+				superman.Bag.Blanks[i].Medicines[j].Resume=0;
+				superman.Bag.Blanks[i].Current_Weight+=superman.Bag.Blanks[i].Medicines[j].Weight;
+			}
+		}
+	}
+}
+void buyBag(hero& superman)
+{//判断英雄是否有钱
+	if(superman.Money>=40)
+	{//有钱的话则给背包扩大四格
+		superman.Bag.Max_Number+=4;
+		blank* ptemp = new blank[superman.Bag.Max_Number];//新起一个数组，大小为原来的加上4，
+		for(int i=0;i<superman.Bag.Max_Number;i++)
+		{//遍历原来的数组，将数组里的值一对一的逐个传给新建的数组
+			ptemp[i].ID = superman.Bag.Blanks[i].ID;//背包空格ID
+			ptemp[i].Max_Size = superman.Bag.Blanks[i].Max_Size;//背包空格最大容量
+			ptemp[i].Current_Goods_Number = superman.Bag.Blanks[i].Current_Goods_Number;//背包空格当前物品数
+			ptemp[i].Current_Weight = superman.Bag.Blanks[i].Current_Weight;//背包空格所存物品总质量
+			for(int j=0;j<superman.Bag.Blanks[i].Max_Size;j++)
+			{//背包格子内物品
+				ptemp[i].Medicines[j].ID=superman.Bag.Blanks[i].Medicines[j].ID;
+				ptemp[i].Medicines[j].Gold=superman.Bag.Blanks[i].Medicines[j].Gold;
+				ptemp[i].Medicines[j].Resume=superman.Bag.Blanks[i].Medicines[j].Resume;
+				ptemp[i].Medicines[j].Weight=superman.Bag.Blanks[i].Medicines[j].Weight;
+			}
+		}
+		//删除原数组的所有元素
+		delete []superman.Bag.Blanks;
+		//将原数组的指针指向新建的数组以完成扩容
+		superman.Bag.Blanks = ptemp;
+		//扣钱
+		superman.Money-=40;
+	}
+	initBag(superman);///调用初始化函数对新的背包重新初始化
+}
+void openBag(hero& superman)//打开背包
+{
+	cout<<"背包信息"<<endl;
+	cout<<"编号\t物品名\t\t物品效果\t物品重量\t物品价值\t物品数量"<<endl;
+	for(int i=0;i<superman.Bag.Max_Number;i++)
+	{
+		if(superman.Bag.Blanks[i].Current_Weight==0)
+		{
+			cout<<i+1<<"\t"<<"< >"<<"\t\t"<<"< >"<<"\t\t"<<"< >"<<"\t\t"<<"< >"<<"\t\t"<<"< >"<<endl;
+		}else
+		{
+			switch (superman.Bag.Blanks[i].Medicines[0].ID)//通过编号打印名字
+			{
+			case 1:
+				cout<<superman.Bag.Blanks[i].ID<<"\t红色小药\t"<<superman.Bag.Blanks[i].Medicines[0].Resume<<"\t\t"<<superman.Bag.Blanks[i].Medicines[0].Weight<<"\t\t"<<superman.Bag.Blanks[i].Medicines[0].Gold<<"\t\t"<<superman.Bag.Blanks[i].Current_Weight/superman.Bag.Blanks[i].Medicines[0].Weight<<endl;
+				break;
+			case 2:
+				cout<<superman.Bag.Blanks[i].ID<<"\t愤怒合剂\t"<<superman.Bag.Blanks[i].Medicines[0].Resume<<"\t\t"<<superman.Bag.Blanks[i].Medicines[0].Weight<<"\t\t"<<superman.Bag.Blanks[i].Medicines[0].Gold<<"\t\t"<<superman.Bag.Blanks[i].Current_Weight/superman.Bag.Blanks[i].Medicines[0].Weight<<endl;
+				break;
+			case 3:
+				cout<<superman.Bag.Blanks[i].ID<<"\t钢铁合剂\t"<<superman.Bag.Blanks[i].Medicines[0].Resume<<"\t\t"<<superman.Bag.Blanks[i].Medicines[0].Weight<<"\t\t"<<superman.Bag.Blanks[i].Medicines[0].Gold<<"\t\t"<<superman.Bag.Blanks[i].Current_Weight/superman.Bag.Blanks[i].Medicines[0].Weight<<endl;
+				break;
+			}
+		}
+	}
+	cout<<"负重\t\t"<<superman.Bag.Used_Load<<"/"<<superman.Bag.Max_Load<<endl;
+	cout<<"当前物品数量\t"<<superman.Bag.Current_Number<<"/"<<superman.Bag.Max_Number<<endl;
+}
+void sortBlank(hero& superman,int value)
+{//该函数是为了使格子中的每个元素在第一个被使用之后，后面的能往前补上以成功实现一键使用，不需要多个按键
+	superman.Bag.Blanks[value-'1'].Current_Weight-=superman.Bag.Blanks[value-'1'].Medicines[0].Weight;//背包格子内减去一瓶的质量
+	superman.Bag.Used_Load-=superman.Bag.Blanks[value-'1'].Medicines[0].Weight;//已用空间减少，整个背包已占质量减少一瓶
+	int i;
+	for(i=1;i<5;i++)
+	{
+		superman.Bag.Blanks[value-'1'].Medicines[i-1].ID=superman.Bag.Blanks[value-'1'].Medicines[i].ID;
+		superman.Bag.Blanks[value-'1'].Medicines[i-1].Gold=superman.Bag.Blanks[value-'1'].Medicines[i].Gold;
+		superman.Bag.Blanks[value-'1'].Medicines[i-1].Weight=superman.Bag.Blanks[value-'1'].Medicines[i].Weight;
+		superman.Bag.Blanks[value-'1'].Medicines[i-1].Resume=superman.Bag.Blanks[value-'1'].Medicines[i].Resume;
+	}
+	superman.Bag.Blanks[value-'1'].Medicines[i-1].ID=0;
+	superman.Bag.Blanks[value-'1'].Medicines[i-1].Gold=0;
+	superman.Bag.Blanks[value-'1'].Medicines[i-1].Weight=0;
+	superman.Bag.Blanks[value-'1'].Medicines[i-1].Resume=0;
+	superman.Bag.Blanks[value-'1'].Current_Goods_Number--;//当前格子物品数减一
+}
+void useStuff(hero& superman,char value)//使用东西
+{//选择想要使用的物品传入该函数后，判断该位置是否有物品可用
+	if(superman.Bag.Blanks[value-'1'].Current_Weight!=0)
+	{//可用，则通过ID判断该物品是哪类东西，则增加哪个属性
+		switch(superman.Bag.Blanks[value-'1'].Medicines[0].ID)
+		{
+		case 1://加血
+			if(superman.Blood<superman.Max_Blood)
+			{
+				superman.Blood+=superman.Bag.Blanks[value-'1'].Medicines[0].Resume;
+				if(superman.Blood>superman.Max_Blood)
+				{
+					superman.Blood=superman.Max_Blood;
+				}
+			sortBlank(superman,value);//调用该函数是后面的数在前面被使用后顶上去
+			}
+			break;
+		case 2://加攻击力
+			superman.Attack+=superman.Bag.Blanks[value-'1'].Medicines[0].Resume;
+			sortBlank(superman,value);
+			break;
+		case 3://加防御力
+			superman.Defend+=superman.Bag.Blanks[value-'1'].Medicines[0].Resume;
+			sortBlank(superman,value);
+			break;
+		}
+	}else
+		return;
+}
+void sortBag(hero& superman)//整理背包
+{//对背包进行整理，使背包前段没有空位置
+	for(int i=0;i<superman.Bag.Max_Number;i++)
+	{
+		if(superman.Bag.Blanks[i].Current_Weight==0)
+		{
+			int j;
+			for(j=i+1;j<superman.Bag.Max_Number;j++)
+			{//移动格子
+				superman.Bag.Blanks[j-1].ID=superman.Bag.Blanks[j].ID; 
+				superman.Bag.Blanks[j-1].Max_Size=superman.Bag.Blanks[j].Max_Size; 
+				superman.Bag.Blanks[j-1].Current_Weight=superman.Bag.Blanks[j].Current_Weight; 
+				superman.Bag.Blanks[j-1].Current_Goods_Number=superman.Bag.Blanks[j].Current_Goods_Number;
+				for(int k=0;k<5;k++)
+				{//移动格子内物品
+					superman.Bag.Blanks[j-1].Medicines[k].ID=superman.Bag.Blanks[j].Medicines[k].ID; 
+					superman.Bag.Blanks[j-1].Medicines[k].Gold=superman.Bag.Blanks[j].Medicines[k].Gold; 
+					superman.Bag.Blanks[j-1].Medicines[k].Resume=superman.Bag.Blanks[j].Medicines[k].Resume; 
+					superman.Bag.Blanks[j-1].Medicines[k].Weight=superman.Bag.Blanks[j].Medicines[k].Weight; 
+				}
+			}
+			superman.Bag.Blanks[j-1].ID=0; 
+			superman.Bag.Blanks[j-1].Max_Size=0; 
+			superman.Bag.Blanks[j-1].Current_Weight=0; 
+			superman.Bag.Blanks[j-1].Current_Goods_Number=0;
+			for(j=1;j<superman.Bag.Max_Number;j++)//循环一边该背包
+			{//判断该背包是否还有空位插在两个非空位置中间
+				if(superman.Bag.Blanks[j].Current_Weight!=0&&superman.Bag.Blanks[j-1].Current_Weight==0)
+				{//有的话就让该过程整个从头再来一次
+					i=0;
+					break;
+				}
+			}
+		}
+	}
+}
+void sprite_Data(hero& superman)//英雄的属性资料显示
+{
+	cout<<"英雄信息"<<endl;
+	cout<<superman.Name<<"の等级："<<superman.Lv<<endl;
+	cout<<superman.Name<<"の血量："<<superman.Blood<<endl;
+	cout<<superman.Name<<"の防御："<<superman.Defend<<endl;
+	cout<<superman.Name<<"の攻击："<<superman.Attack<<endl;
+	cout<<superman.Name<<"の钥匙："<<superman.Key<<endl;
+	cout<<superman.Name<<"の金币："<<superman.Money<<endl;
+}
+void sprite_Data(hero& superman,monster& spider)//英雄的属性资料显示
+{
+	cout<<superman.Name<<"の等级："<<superman.Lv<<"\t"<<spider.Name<<"の等级："<<spider.Lv<<endl;
+	cout<<superman.Name<<"の血量："<<superman.Blood<<"\t"<<spider.Name<<"の血量："<<spider.Blood<<endl;
+	cout<<superman.Name<<"の防御："<<superman.Defend<<"\t"<<spider.Name<<"の防御："<<spider.Defend<<endl;
+	cout<<superman.Name<<"の攻击："<<superman.Attack<<"\t"<<spider.Name<<"の攻击："<<spider.Attack<<endl;
+	cout<<superman.Name<<"の金币："<<superman.Money<<"\t"<<spider.Name<<"の金币："<<spider.Gold<<endl;
+}
+
+void get_Hero_Position(int towerMap[5][20][20],int& floor,int& hero_X,int& hero_Y)
+{
+	for(int i=0;i<20;i++)
+	{
+		for(int j=0;j<20;j++)
+		{
+			if(towerMap[floor][i][j]==9)
+			{
+				hero_X=i;
+				hero_Y=j;
+				return;
+			}
+		}
+	}
+}
+int fight(hero *superman,monster spider)//定义一个函数实现对打
+{
+	int i=0;//定义一个变量记录打了几个回合
+	if((*superman).Lv>=spider.Lv)//判断谁等级高谁先打
+	{
+		sprite_Data((*superman),spider);//显示双方资料
+		for(;;)//不断循环的互砍
+		{
+			if((*superman).Attack-spider.Defend<=0)//判断自身公里是否大于对方防御力
+			{
+				spider.Blood-=0;
+			}else
+			{
+				spider.Blood-=((*superman).Attack-spider.Defend);//攻击方的攻击力减去被攻击方的防御力对于所受伤害
+			}
+			if(spider.Blood<=0)//判断怪物是否死亡
+			{
+				cout<<"第"<<++i<<"回合,"<<(*superman).Name<<"攻击"<<spider.Name<<"造成 "<<(*superman).Attack-spider.Defend+spider.Blood<<"伤害，怪物死亡"<<"\t英雄剩余血量"<<(*superman).Blood<<endl;
+				spider.Blood=0;
+				cout<<"怪物掉落 "<<spider.Gold<<" 元"<<endl;
+				cout<<"按 z or Z 表示老子不缺钱"<<endl;
+				switch(getch())
+				{
+				case 'z':
+				case 'Z':
+					return i;
+					break;
+				}
+				(*superman).Money+=spider.Gold;
+				return i;
+			}else
+			{
+				cout<<"第"<<++i<<"回合,"<<(*superman).Name<<"攻击"<<spider.Name<<"造成 "<<(*superman).Attack-spider.Defend<<"伤害"<<"\t"<<spider.Blood<<"\t"<<(*superman).Blood<<endl;
+				Sleep(1000);
+			}
+			if(spider.Attack-(*superman).Defend<=0)
+			{
+				(*superman).Blood-=0;
+			}else
+			{
+				(*superman).Blood-=(spider.Attack-(*superman).Defend);
+			}
+			if((*superman).Blood<=0)//判断英雄是否死亡
+			{
+				cout<<"第"<<++i<<"回合,"<<spider.Name<<"攻击"<<(*superman).Name<<"造成 "<<spider.Attack-(*superman).Defend+(*superman).Blood<<"伤害，英雄死亡"<<"\t怪物剩余血量"<<spider.Blood<<endl;
+				(*superman).Blood=0;
+				cout<<"怪物掉落 "<<spider.Gold<<" 元"<<endl;
+				cout<<"按 z or Z 表示老子不缺钱"<<endl;
+				switch(getch())
+				{
+				case 'z':
+				case 'Z':
+					return i;
+					break;
+				}
+				(*superman).Money+=spider.Gold;
+				return i;
+			}else
+			{
+				cout<<"第"<<++i<<"回合,"<<spider.Name<<"攻击"<<(*superman).Name<<"造成 "<<spider.Attack-(*superman).Defend<<"伤害"<<"\t"<<spider.Blood<<"\t"<<(*superman).Blood<<endl;
+				Sleep(1000);
+			}
+		}
+	}else
+	{
+		sprite_Data((*superman),spider);//显示双方资料
+		for(;;)
+		{
+			if(spider.Attack-(*superman).Defend<=0)
+			{
+				(*superman).Blood-=0;
+			}else
+			{
+				(*superman).Blood-=(spider.Attack-(*superman).Defend);
+			}
+			if((*superman).Blood<=0)
+			{
+				cout<<"第"<<++i<<"回合,"<<spider.Name<<"攻击"<<(*superman).Name<<"造成 "<<spider.Attack-(*superman).Defend+(*superman).Blood<<"伤害，"<<(*superman).Name<<"死亡"<<"\t怪物剩余血量"<<spider.Blood<<endl;
+				(*superman).Blood=0;
+				cout<<"怪物掉落 "<<spider.Gold<<" 元"<<endl;
+				cout<<"按 z or Z 表示老子不缺钱"<<endl;
+				switch(getch())
+				{
+				case 'z':
+				case 'Z':
+					return i;
+					break;
+				}
+				(*superman).Money+=spider.Gold;
+				return i;
+			}else
+			{
+				cout<<"第"<<++i<<"回合,"<<spider.Name<<"攻击"<<(*superman).Name<<"造成 "<<spider.Attack-(*superman).Defend<<"伤害"<<"\t"<<spider.Blood<<"\t"<<(*superman).Blood<<endl;
+				Sleep(1000);
+			}
+			if((*superman).Attack-spider.Defend<=0)
+			{
+			spider.Blood-=0;
+			}else
+			{
+				spider.Blood-=((*superman).Attack-spider.Defend);
+			}
+			if(spider.Blood<=0)
+			{
+				cout<<"第"<<++i<<"回合,"<<(*superman).Name<<"攻击"<<spider.Name<<"造成 "<<(*superman).Attack-spider.Defend+spider.Blood<<"伤害，怪物死亡"<<"\t英雄剩余血量"<<(*superman).Blood<<endl;
+				spider.Blood=0;
+				cout<<"怪物掉落 "<<spider.Gold<<" 元"<<endl;
+				cout<<"按 z or Z 表示老子不缺钱"<<endl;
+				switch(getch())
+				{
+				case 'z':
+				case 'Z':
+					return i;
+					break;
+				}
+				(*superman).Money+=spider.Gold;
+				return i;
+			}else
+			{
+				cout<<"第"<<++i<<"回合,"<<(*superman).Name<<"攻击"<<spider.Name<<"造成 "<<(*superman).Attack-spider.Defend<<"伤害"<<"\t"<<spider.Blood<<"\t"<<(*superman).Blood<<endl;
+				Sleep(1000);
+			}
+		}
+	}
+}
+void upLv(int& s,hero *superman)
+{
+
+	while(s >=20)//判断是否进行了20回合的战斗
+	{
+		(*superman).Lv++;//是则加一级
+		s-=20;//将累计置零重新计算回合数
+	}
+}
+void mall(hero& superman,medicine _blood_M,medicine defend_M,medicine attack_M)
+{
+	cout<<"press 1 buy red"<<endl;
+	cout<<"press 2 buy shield"<<endl;
+	cout<<"press 3 buy sword"<<endl;
+	cout<<"press 4 buy bag"<<endl;
+	switch (getch())
+	{
+	case '1'://血药
+		buyStuff(superman,_blood_M);
+		break;
+	case '2'://护甲
+		buyStuff(superman,defend_M);
+		break;
+	case '3'://攻击
+		buyStuff(superman,attack_M);
+		break;
+	case '4'://买包
+		buyBag(superman);
+			break;
+	}
+}
+void hero_Act(int towerMap[5][20][20],int& floor,int& hero_X,int& hero_Y,hero& superman,monster enemy,int& s,medicine _blood_M,medicine defend_M,medicine attack_M)
+{
+	switch(getch())
+	{
+	case 'q':
+	case 'Q':
+
+		break;
+	case 'b':
+	case 'B':
+		while(true)
+		{
+			system("CLS");
+			sprite_Data(superman);//英雄资料显示
+			openBag(superman);//打开背包
+			char value =getch();//选择物品
+			if(!(value>='0'&&value <= '9'))
+			{
+				break;
+			}else if(value == '0')
+			{
+				sortBag(superman);
+			}else 
+			{
+				useStuff(superman,value);//使用物品
+			}
+		}
+		break;
+	case 'w':
+	case 'W':
+		switch (towerMap[floor][hero_X-1][hero_Y])
+		{
+		case 0://空地
+			if(towerMap[floor][hero_X][hero_Y]==14)
+			{
+				towerMap[floor][hero_X-1][hero_Y]=9;
+				towerMap[floor][hero_X][hero_Y]=5;
+			}else
+			{
+				towerMap[floor][hero_X-1][hero_Y]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			--hero_X;
+			break;
+		case 1://墙
+			break;
+		case 2://敌人
+			system("CLS");
+			s+=fight(&superman,enemy);
+			upLv(s,&superman);
+			break;
+		case 3://门
+			if(!(superman.Key))
+			{
+				break;
+			}
+			if(towerMap[floor][hero_X][hero_Y]==14)
+			{
+				superman.Key--;
+				towerMap[floor][hero_X-1][hero_Y]=9;
+				towerMap[floor][hero_X][hero_Y]=5;
+			}else
+			{
+				superman.Key--;
+				towerMap[floor][hero_X-1][hero_Y]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			--hero_X;
+			break;
+		case 4://钥匙
+			superman.Key++;
+			towerMap[floor][hero_X-1][hero_Y]=towerMap[floor][hero_X][hero_Y];
+			towerMap[floor][hero_X][hero_Y]=0;
+			--hero_X;
+			break;
+		case 5://药水
+			if(pickStuff(superman, _blood_M))
+			{
+				towerMap[floor][hero_X-1][hero_Y]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}else
+			{
+				towerMap[floor][hero_X-1][hero_Y]+=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			--hero_X;
+			break;
+		case 6://下一层
+			system("CLS");
+			floor+=1;
+			get_Hero_Position(towerMap,floor,hero_X,hero_Y);
+			break;
+		case 7://上一层
+			system("CLS");
+			floor-=1;
+			get_Hero_Position(towerMap,floor,hero_X,hero_Y);
+			break;
+		case 8://商店
+			system("CLS");
+			sprite_Data(superman);
+			mall(superman, _blood_M, defend_M, attack_M);
+			break;
+		}
+		break;
+	case 's':
+	case 'S':
+		switch (towerMap[floor][hero_X+1][hero_Y])
+		{
+		case 0://空地
+			if(towerMap[floor][hero_X][hero_Y]==14)
+			{
+				towerMap[floor][hero_X+1][hero_Y]=9;
+				towerMap[floor][hero_X][hero_Y]=5;
+			}else
+			{
+				towerMap[floor][hero_X+1][hero_Y]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			++hero_X;
+			break;
+		case 1://墙
+			break;
+		case 2://敌人
+			system("CLS");
+			s+=fight(&superman,enemy);
+			upLv(s,&superman);
+			break;
+		case 3://门
+			if(!(superman.Key))
+			{
+				break;
+			}
+			if(towerMap[floor][hero_X][hero_Y]==14)
+			{
+				superman.Key--;
+				towerMap[floor][hero_X+1][hero_Y]=9;
+				towerMap[floor][hero_X][hero_Y]=5;
+			}else
+			{
+				superman.Key--;
+				towerMap[floor][hero_X+1][hero_Y]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			++hero_X;
+			break;
+		case 4://钥匙
+			superman.Key++;
+			towerMap[floor][hero_X+1][hero_Y]=towerMap[floor][hero_X][hero_Y];
+			towerMap[floor][hero_X][hero_Y]=0;
+			++hero_X;
+			break;
+		case 5://药水
+			if(pickStuff(superman, _blood_M))
+			{
+				towerMap[floor][hero_X+1][hero_Y]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}else
+			{
+				towerMap[floor][hero_X+1][hero_Y]+=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			++hero_X;
+			break;
+		case 6://下一层
+			system("CLS");
+			floor+=1;
+			get_Hero_Position(towerMap,floor,hero_X,hero_Y);
+			break;
+		case 7://上一层
+			system("CLS");
+			floor-=1;
+			get_Hero_Position(towerMap,floor,hero_X,hero_Y);
+			break;
+		case 8://商店
+			system("CLS");
+			sprite_Data(superman);
+			mall(superman, _blood_M, defend_M, attack_M);
+			break;
+		}
+		break;
+	case 'a':
+	case 'A':
+		switch (towerMap[floor][hero_X][hero_Y-1])
+		{
+		case 0://空地
+			if(towerMap[floor][hero_X][hero_Y]==14)
+			{
+				towerMap[floor][hero_X][hero_Y-1]=9;
+				towerMap[floor][hero_X][hero_Y]=5;
+			}else
+			{
+				towerMap[floor][hero_X][hero_Y-1]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			--hero_Y;
+			break;
+		case 1://墙
+			break;
+		case 2://敌人
+			system("CLS");
+			s+=fight(&superman,enemy);
+			upLv(s,&superman);
+			break;
+		case 3://门
+			if(!(superman.Key))
+			{
+				break;
+			}
+			if(towerMap[floor][hero_X][hero_Y]==14)
+			{
+				superman.Key--;
+				towerMap[floor][hero_X][hero_Y-1]=9;
+				towerMap[floor][hero_X][hero_Y]=5;
+			}else
+			{
+				superman.Key--;
+				towerMap[floor][hero_X][hero_Y-1]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			--hero_Y;
+			break;
+		case 4://钥匙
+			superman.Key++;
+			towerMap[floor][hero_X][hero_Y-1]=towerMap[floor][hero_X][hero_Y];
+			towerMap[floor][hero_X][hero_Y]=0;
+			--hero_Y;
+			break;
+		case 5://药水
+			if(pickStuff(superman, _blood_M))
+			{
+				towerMap[floor][hero_X][hero_Y-1]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}else
+			{
+				towerMap[floor][hero_X][hero_Y-1]+=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			--hero_Y;
+			break;
+		case 6://下一层
+			system("CLS");
+			floor+=1;
+			get_Hero_Position(towerMap,floor,hero_X,hero_Y);
+			break;
+		case 7://上一层
+			system("CLS");
+			floor-=1;
+			get_Hero_Position(towerMap,floor,hero_X,hero_Y);
+			break;
+		case 8://商店
+			system("CLS");
+			sprite_Data(superman);
+			mall(superman, _blood_M, defend_M, attack_M);
+			break;
+		}
+		break;
+	case 'd':
+	case 'D':
+		switch (towerMap[floor][hero_X][hero_Y+1])
+		{
+		case 0://空地
+			if(towerMap[floor][hero_X][hero_Y]==14)
+			{
+				towerMap[floor][hero_X][hero_Y+1]=9;
+				towerMap[floor][hero_X][hero_Y]=5;
+			}else
+			{
+				towerMap[floor][hero_X][hero_Y+1]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			++hero_Y;
+			break;
+		case 1://墙
+			break;
+		case 2://敌人
+			system("CLS");
+			s+=fight(&superman,enemy);
+			upLv(s,&superman);
+			break;
+		case 3://门
+			if(!(superman.Key))
+			{
+				break;
+			}
+			if(towerMap[floor][hero_X][hero_Y]==14)
+			{
+				superman.Key--;
+				towerMap[floor][hero_X][hero_Y+1]=9;
+				towerMap[floor][hero_X][hero_Y]=5;
+			}else
+			{
+				superman.Key--;
+				towerMap[floor][hero_X][hero_Y+1]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			++hero_Y;
+			break;
+		case 4://钥匙
+			superman.Key++;
+			towerMap[floor][hero_X][hero_Y+1]=towerMap[floor][hero_X][hero_Y];
+			towerMap[floor][hero_X][hero_Y]=0;
+			++hero_Y;
+			break;
+		case 5://药水
+			if(pickStuff(superman, _blood_M))
+			{
+				towerMap[floor][hero_X][hero_Y+1]=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}else
+			{
+				towerMap[floor][hero_X][hero_Y+1]+=towerMap[floor][hero_X][hero_Y];
+				towerMap[floor][hero_X][hero_Y]=0;
+			}
+			++hero_Y;
+			break;
+		case 6://下一层
+			system("CLS");
+			floor+=1;
+			get_Hero_Position(towerMap,floor,hero_X,hero_Y);
+			break;
+		case 7://上一层
+			system("CLS");
+			floor-=1;
+			get_Hero_Position(towerMap,floor,hero_X,hero_Y);
+			break;
+		case 8://商店
+			system("CLS");
+			sprite_Data(superman);
+			mall(superman, _blood_M, defend_M, attack_M);
+			break;
+		}
+		break;
+	}
+}
+void flashMap(int towerMap[5][20][20],int& floor)
+{
+	for(int i=0;i<20;i++)
+	{
+		for(int j=0;j<20;j++)
+		{
+			switch(towerMap[floor][i][j])
+			{
+			case 0://空地
+				cout<<"  ";
+				break;
+			case 1://墙
+				cout<<"█";
+				break;
+			case 2://敌人
+				cout<<"Я";
+				break;
+			case 3://门
+				cout<<"∏";
+				break;
+			case 4://钥匙
+				cout<<"ㄒ";
+				break;
+			case 5://血瓶
+				cout<<"Φ";
+				break;
+			case 6:
+				cout<<"↓";
+				break;
+			case 7:
+				cout<<"↑";
+				break;
+			case 8://商店
+				cout<<"卐";
+				break;
+			case 9://英雄
+				cout<<"♂";
+				break;
+			case 14:
+				cout<<"♀";
+				break;
+			}
+		}
+		cout<<endl;
+	}
+}
+
+int main()
+{
+	int floor=0;
+	int towerMap[5][20][20] = 
+	{
+		{//0为空地，1为墙，2为敌人，3为门，4为钥匙，5为药水，6为下一层，7为上一层，8为商店，9为英雄
+			{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,3,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,9,0,0,0,0,0,0,0,6,0,0,0,0,0,0,0,0,0,1},
+			{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+		},
+		{//0为空地，1为墙，2为敌人，3为门，4为钥匙，5为药水，6为下一层，7为上一层，8为商店，9为英雄
+			{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,3,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,7,0,0,0,0,4,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,3,4,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+			{1,0,0,0,0,0,0,0,0,9,0,0,0,0,0,0,0,0,0,1},
+			{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+		},
+	};
+	medicine _blood_M = {1,"红色小药",100,10,10};
+	medicine defend_M = {3,"钢铁合剂",20,40,50};
+	medicine attack_M = {2,"愤怒合剂",50,30,50};
+	hero superman = {"who's your daddy?",1,500,1000,30,35,0,1000,{4,0,0,5000,(new blank[superman.Bag.Max_Number])}};
+	monster spider = {"小蜘蛛",2,50,5,35,50};
+	monster enemy[10] = 
+	{
+		{"小蜘蛛",2,50,5,35},
+		{"小蝙蝠",3,50,5,35},
+		{"小青蛙",4,50,5,35},
+		{"小乐言",5,50,5,35},
+		{"深海鱼",6,50,5,35},
+		{"小日本",7,50,5,35},
+		{"小勾勾",8,50,5,35},
+		{"小可爱",9,50,5,35},
+		{"小禽兽",10,50,5,35},
+		{"小宁人",11,50,5,35},
+	};
+	int s=0;
+	int hero_X,hero_Y;
+	get_Hero_Position(towerMap,floor,hero_X,hero_Y);
+	towerMap[floor][hero_X][hero_Y];
+	initBag(superman);
+	for(;superman.Blood;)
+	{
+		flashMap(towerMap,floor);
+		hero_Act(towerMap,floor,hero_X,hero_Y,superman,spider,s,_blood_M,defend_M,attack_M);
+		system("CLS");
+	}
+	cout<<"******** game over ********"<<endl;
+	return 0;
+}
